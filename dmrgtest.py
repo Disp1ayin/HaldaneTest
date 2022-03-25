@@ -1,6 +1,7 @@
 """
 Example of backend independent DMRG calculation for the
-spin 1/2 Heisenberg Model.
+Haldane Model.
+H=J*S(i)*S(i+1)+D*Sz^2
 """
 
 from typing import Type, Text
