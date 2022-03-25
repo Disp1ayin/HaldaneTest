@@ -308,29 +308,6 @@ if __name__ == '__main__':
 
 
 
-    '''
-    #D-Energy
-    Energies=[]
-
-    Dlist = np.arange(0, 2.2, 0.1)
-    for d in Dlist:
-        energy, groundState = run_twosite_dmrg(
-            num_sites,
-            bond_dim,
-            datatype,
-            jz,
-            jxy,
-            d*D,
-            num_sweeps=n_sweeps,
-            backend=be)
-        Energies.append(energy)
-    plt.scatter(Dlist, Energies, c='blue',s=100)
-    plt.show()
-'''
-
-
-
-
     # 不同L下的D-S图
     alpha = np.linspace(start=0.25, stop=1.0, num=4)  # 透明度数组
 
@@ -368,6 +345,32 @@ if __name__ == '__main__':
     plt.xlabel("D")
     plt.ylabel("S")
     plt.show()
+
+
+
+    '''
+    #D-Energy
+    Energies=[]
+
+    Dlist = np.arange(0, 2.2, 0.1)
+    for d in Dlist:
+        energy, groundState = run_twosite_dmrg(
+            num_sites,
+            bond_dim,
+            datatype,
+            jz,
+            jxy,
+            d*D,
+            num_sweeps=n_sweeps,
+            backend=be)
+        Energies.append(energy)
+    plt.scatter(Dlist, Energies, c='blue',s=100)
+    plt.show()
+'''
+
+
+
+
 
 
 
