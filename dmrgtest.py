@@ -67,8 +67,8 @@ class FiniteHaldanespin1(tn.FiniteMPO):
         mpo = []
         temp = np.zeros((1, 5, 3, 3), dtype=dtype)
         # small field at the first site For numerical stability
-        temp[0, 0, 0, 0] = 0.01
-        temp[0, 0, 2, 2] = -0.01
+        temp[0, 0, 0, 0] = 0
+        temp[0, 0, 2, 2] = -0
         # D
         temp[0, 0, 0, 0] = D[0]
         temp[0, 0, 2, 2] = D[0]
@@ -124,8 +124,8 @@ class FiniteHaldanespin1(tn.FiniteMPO):
             mpo.append(temp)
         temp = np.zeros((5, 1, 3, 3), dtype=dtype)
         # small field at the last site For numerical stability
-        temp[4, 0, 0, 0] = -0.01
-        temp[4, 0, 2, 2] = 0.01
+        temp[4, 0, 0, 0] = -0
+        temp[4, 0, 2, 2] = 0
         # 11
         temp[0, 0, 0, 0] = 1.0
         temp[0, 0, 1, 1] = 1.0
@@ -198,7 +198,7 @@ def run_twosite_dmrg(N: int, bond_dim: int, dtype: Type[np.number], Jz: np.ndarr
                      Jxy: np.ndarray, D: np.ndarray, num_sweeps: int,
                      backend: Text):
     """
-  Run two-site dmrg for the XXZ Heisenberg model using a given backend.
+  Run two-site dmrg for the Haldane model using a given backend.
 
   Args:
     N: Number of spins.
@@ -212,7 +212,7 @@ def run_twosite_dmrg(N: int, bond_dim: int, dtype: Type[np.number], Jz: np.ndarr
     float/complex: The energy upon termination of DMRG.
 
   """
-    mps = initialize_spin1_mps(N, 32, dtype, backend)
+    mps = initialize_spin1_mps(N, bond_dim, dtype, backend)
     mpo = initialize_Haldane_mpo(Jz, Jxy, D, dtype, backend)
     dmrg = tn.FiniteDMRG(mps, mpo)
     final_energy = dmrg.run_two_site(max_bond_dim=bond_dim, num_sweeps=num_sweeps, num_krylov_vecs=10, verbose=1)
@@ -264,7 +264,7 @@ if __name__ == '__main__':
     jz = np.ones(num_sites - 1)
     jxy = np.ones(num_sites - 1)
     D = np.ones(num_sites)
-    n_sweeps = 10
+    n_sweeps = 12
     energies = {}
     be = 'numpy'
 
@@ -292,7 +292,7 @@ if __name__ == '__main__':
         num_sites = sitenumber[i]
         jz = np.ones(num_sites - 1)
         jxy = np.ones(num_sites - 1)
-        D = np.ones(num_sites)
+
 
         for d in Dlist:
             D = d * np.ones(num_sites)
@@ -310,7 +310,7 @@ if __name__ == '__main__':
             D_array.append(d)
             print(f'Dmrg done for d={d},L={num_sites}')
 
-            S_array.append(EntangleS)
+            S_array.append(Entropy)
 
         ax.scatter(D_array, S_array, c='blue', alpha=alpha[i], s=150)
 
