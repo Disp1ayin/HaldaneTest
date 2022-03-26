@@ -66,20 +66,20 @@ class FiniteHaldanespin1(tn.FiniteMPO):
         N = len(D)
         mpo = []
         temp = np.zeros((1, 5, 3, 3), dtype=dtype)
-        #small field at the first site For numerical stability
-        temp[0,0,0,0]=0.1
-        temp[0,0,2,2]=-0.1
+        # small field at the first site For numerical stability
+        temp[0, 0, 0, 0] = 0.01
+        temp[0, 0, 2, 2] = -0.01
         # D
         temp[0, 0, 0, 0] = D[0]
         temp[0, 0, 2, 2] = D[0]
 
-        # Sm
+        # Sm*J/2
         temp[0, 1, 1, 0] = 2 ** 0.5 * Jxy[0] / 2.0
         temp[0, 1, 2, 1] = 2 ** 0.5 * Jxy[0] / 2.0
-        # Sp
+        # Sp*J/2
         temp[0, 2, 0, 1] = 2 ** 0.5 * Jxy[0] / 2.0
         temp[0, 2, 1, 2] = 2 ** 0.5 * Jxy[0] / 2.0
-        # Sz
+        # J*Sz
         temp[0, 3, 0, 0] = Jz[0]
         temp[0, 3, 2, 2] = -Jz[0]
 
@@ -95,25 +95,25 @@ class FiniteHaldanespin1(tn.FiniteMPO):
             temp[0, 0, 1, 1] = 1.0
             temp[0, 0, 2, 2] = 1.0
             # Sp
-            temp[1, 0, 0, 1] = 2 ** 0.5 * Jxy[n] / 2.0 * 1.0
-            temp[1, 0, 1, 2] = 2 ** 0.5 * Jxy[n] / 2.0 * 1.0
+            temp[1, 0, 0, 1] = 2 ** 0.5
+            temp[1, 0, 1, 2] = 2 ** 0.5
             # Sm
-            temp[2, 0, 1, 0] = 2 ** 0.5 * Jxy[n] / 2.0 * 1.0
-            temp[2, 0, 2, 1] = 2 ** 0.5 * Jxy[n] / 2.0 * 1.0
+            temp[2, 0, 1, 0] = 2 ** 0.5
+            temp[2, 0, 2, 1] = 2 ** 0.5
             # Sz
-            temp[3, 0, 0, 0] = Jz[n]
-            temp[3, 0, 2, 2] = -Jz[n]
+            temp[3, 0, 0, 0] = 1
+            temp[3, 0, 2, 2] = -1
             # D
-            temp[4, 0, 0, 0] = 1 * D[n]
-            temp[4, 0, 2, 2] = 1 * D[n]
+            temp[4, 0, 0, 0] = D[n]
+            temp[4, 0, 2, 2] = D[n]
 
-            # Sm
+            # Sm*J/2
             temp[4, 1, 1, 0] = 2 ** 0.5 * Jxy[n] / 2.0
             temp[4, 1, 2, 1] = 2 ** 0.5 * Jxy[n] / 2.0
-            # Sp
+            # Sp*J/2
             temp[4, 2, 0, 1] = 2 ** 0.5 * Jxy[n] / 2.0
             temp[4, 2, 1, 2] = 2 ** 0.5 * Jxy[n] / 2.0
-            # Sz
+            # Sz*J
             temp[4, 3, 0, 0] = Jz[n]
             temp[4, 3, 2, 2] = -Jz[n]
             # 11
@@ -124,18 +124,18 @@ class FiniteHaldanespin1(tn.FiniteMPO):
             mpo.append(temp)
         temp = np.zeros((5, 1, 3, 3), dtype=dtype)
         # small field at the last site For numerical stability
-        temp[4, 0, 0, 0] = -0.1
-        temp[4, 0, 2, 2] = 0.1
+        temp[4, 0, 0, 0] = -0.01
+        temp[4, 0, 2, 2] = 0.01
         # 11
         temp[0, 0, 0, 0] = 1.0
         temp[0, 0, 1, 1] = 1.0
         temp[0, 0, 2, 2] = 1.0
         # Sp
-        temp[1, 0, 0, 1] = 2 ** 0.5 / 2.0
-        temp[1, 0, 1, 2] = 2 ** 0.5 / 2.0
+        temp[1, 0, 0, 1] = 2 ** 0.5
+        temp[1, 0, 1, 2] = 2 ** 0.5
         # Sm
-        temp[2, 0, 1, 0] = 2 ** 0.5 / 2.0
-        temp[2, 0, 2, 1] = 2 ** 0.5 / 2.0
+        temp[2, 0, 1, 0] = 2 ** 0.5
+        temp[2, 0, 2, 1] = 2 ** 0.5
         # Sz
         temp[3, 0, 0, 0] = 1.0
         temp[3, 0, 2, 2] = -1.0
@@ -143,22 +143,12 @@ class FiniteHaldanespin1(tn.FiniteMPO):
         temp[4, 0, 0, 0] = D[-1]
         temp[4, 0, 2, 2] = D[-1]
 
-
         mpo.append(temp)
         super().__init__(tensors=mpo, backend=backend, name=name)
 
 
-
-
-
-
-
-
-
-
-
 def initialize_Haldane_mpo(Jz: np.ndarray, Jxy: np.ndarray, D: np.ndarray,
-                       dtype: Type[np.number], backend: Text):
+                           dtype: Type[np.number], backend: Text):
     """
   Helper function to initialize the XXZ Heisenberg MPO
   for a given backend.
@@ -170,7 +160,6 @@ def initialize_Haldane_mpo(Jz: np.ndarray, Jxy: np.ndarray, D: np.ndarray,
   Returns:
     `tn.FiniteMPS`: A Haldane mps for the corresponding backend.
   """
-
 
     return FiniteHaldanespin1(Jz, Jxy, D, dtype=dtype, backend=backend)
 
@@ -227,49 +216,40 @@ def run_twosite_dmrg(N: int, bond_dim: int, dtype: Type[np.number], Jz: np.ndarr
     mpo = initialize_Haldane_mpo(Jz, Jxy, D, dtype, backend)
     dmrg = tn.FiniteDMRG(mps, mpo)
     final_energy = dmrg.run_two_site(max_bond_dim=bond_dim, num_sweeps=num_sweeps, num_krylov_vecs=10, verbose=1)
-    '''
 
-    #mixed canonical
-    
-    for site in range(N-1):
-        bondBlock= ncon([dmrg.mps.tensors[site], dmrg.mps.tensors[site + 1]],
-                      [[-1, -2, 1], [1, -3, -4]],
-                      backend=dmrg.backend.name)
-        u,s,vh,_=dmrg.mps.svd(bondBlock,2,bond_dim,None)
+    # mixed canonical
+
+    for site in range(N - 1):
+        bondBlock = ncon([dmrg.mps.tensors[site], dmrg.mps.tensors[site + 1]],
+                         [[-1, -2, 1], [1, -3, -4]],
+                         backend=dmrg.backend.name)
+        u, s, vh, _ = dmrg.mps.svd(bondBlock, 2, bond_dim, None)
         s = dmrg.backend.diagflat(s)
-        dmrg.mps.tensors[site]=u
-        dmrg.mps.tensors[site+1]=ncon([s, vh], [[-1, 1], [1, -2, -3]],
+        dmrg.mps.tensors[site] = u
+        dmrg.mps.tensors[site + 1] = ncon([s, vh], [[-1, 1], [1, -2, -3]],
                                           backend=dmrg.backend.name)
-    for site in range(N-1,num_sites/2-1,-1):
-        bondBlock = ncon([dmrg.mps.tensors[site-1], dmrg.mps.tensors[site]],
+    for site in range(N - 1, int(num_sites / 2 - 1), -1):
+        bondBlock = ncon([dmrg.mps.tensors[site - 1], dmrg.mps.tensors[site]],
                          [[-1, -2, 1], [1, -3, -4]],
                          backend=dmrg.backend.name)
         u, s, vh, _ = dmrg.mps.svd(bondBlock, 2, bond_dim, None)
         s = dmrg.backend.diagflat(s)
         dmrg.mps.tensors[site] = vh
-        if site==num_sites/2:
-            dmrg.mps.tensors[site - 1] = u
-            sigularValue=s
-        else:
-            dmrg.mps.tensors[site - 1] = ncon([u, s], [[-1, 1], [1, -2, -3]],
-                                              backend=dmrg.backend.name)
-        '''
+        if site == num_sites / 2:
+            sigularValue = s
 
+        dmrg.mps.tensors[site - 1] = ncon([u, s], [[-1, -2, 1], [1, -3]],
+                                          backend=dmrg.backend.name)
+    EntangleS = 0
+    for i in range(bond_dim):
+        if sigularValue[i][i] > 0:
+            s2 = sigularValue[i][i] ** 2
+            EntangleS = EntangleS - s2 * np.log(s2)
 
-
-
-
-
-
-
-
-
-
-    return final_energy, dmrg.mps
+    return final_energy, dmrg.mps, EntangleS
 
 
 def computeEntanglemnt(mps: tn.FiniteMPS):
-
     num_sites = len(mps.tensors)
     Lenv = mps.left_envs(range(num_sites))
     rouB = Lenv[num_sites / 2]
@@ -278,13 +258,7 @@ def computeEntanglemnt(mps: tn.FiniteMPS):
     return Entropy
 
 
-
-
-
-
-
 if __name__ == '__main__':
-
 
     num_sites, bond_dim, datatype = 16, 32, np.float64
     jz = np.ones(num_sites - 1)
@@ -296,7 +270,7 @@ if __name__ == '__main__':
 
     print(f'\nrunning DMRG for {be} backend')
 
-    energy, groundState = run_twosite_dmrg(
+    energy, groundState, EntangleS = run_twosite_dmrg(
         num_sites,
         bond_dim,
         datatype,
@@ -306,15 +280,13 @@ if __name__ == '__main__':
         num_sweeps=n_sweeps,
         backend=be)
 
-
-
     # 不同L下的D-S图
     alpha = np.linspace(start=0.25, stop=1.0, num=4)  # 透明度数组
 
-    sitenumber = [16, 32, 64]
+    sitenumber = [32]
     Dlist = np.arange(0, 2.2, 0.1)
     fig, ax = plt.subplots()
-    for i in range(0, 3):
+    for i in range(len(sitenumber)):
         D_array = []
         S_array = []
         num_sites = sitenumber[i]
@@ -323,8 +295,8 @@ if __name__ == '__main__':
         D = np.ones(num_sites)
 
         for d in Dlist:
-            D = d * D
-            energies, groundState = run_twosite_dmrg(
+            D = d * np.ones(num_sites)
+            energies, groundState, EntangleS = run_twosite_dmrg(
                 num_sites,
                 bond_dim,
                 datatype,
@@ -338,15 +310,13 @@ if __name__ == '__main__':
             D_array.append(d)
             print(f'Dmrg done for d={d},L={num_sites}')
 
-            S_array.append(Entropy)
+            S_array.append(EntangleS)
 
         ax.scatter(D_array, S_array, c='blue', alpha=alpha[i], s=150)
 
     plt.xlabel("D")
     plt.ylabel("S")
     plt.show()
-
-
 
     '''
     #D-Energy
@@ -367,12 +337,6 @@ if __name__ == '__main__':
     plt.scatter(Dlist, Energies, c='blue',s=100)
     plt.show()
 '''
-
-
-
-
-
-
 
 '''
     # 不同D下的bond_dimension-S图
@@ -443,26 +407,3 @@ if __name__ == '__main__':
     plt.ylabel("S")
     plt.show()
     '''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
