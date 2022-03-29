@@ -31,7 +31,7 @@ def initialize_spin1_mps(N: int, D: int, dtype: Type[np.number], backend: Text):
     `tn.FiniteMPS`: A spin 1 mps for the corresponding backend.
   """
 
-    return tn.FiniteMPS.random([3] * N, [D] * (N - 1), dtype=dtype, backend=backend)
+    return tn.FiniteMPS.random([3] * (N ) , [D] * (N - 1), dtype=dtype, backend=backend)
 
 
 class FiniteHaldanespin1(tn.FiniteMPO):
@@ -66,19 +66,22 @@ class FiniteHaldanespin1(tn.FiniteMPO):
         N = len(D)
         mpo = []
         temp = np.zeros((1, 5, 3, 3), dtype=dtype)
+
         # small field at the first site For numerical stability
-        temp[0, 0, 0, 0] = 0
-        temp[0, 0, 2, 2] = -0
+
+
         # D
-        temp[0, 0, 0, 0] = D[0]
-        temp[0, 0, 2, 2] = D[0]
+        temp[0, 0, 0, 0] = D[0]+0.5
+        temp[0, 0, 2, 2] = D[0]-0.5
 
         # Sm*J/2
         temp[0, 1, 1, 0] = 2 ** 0.5 * Jxy[0] / 2.0
         temp[0, 1, 2, 1] = 2 ** 0.5 * Jxy[0] / 2.0
+
         # Sp*J/2
         temp[0, 2, 0, 1] = 2 ** 0.5 * Jxy[0] / 2.0
         temp[0, 2, 1, 2] = 2 ** 0.5 * Jxy[0] / 2.0
+
         # J*Sz
         temp[0, 3, 0, 0] = Jz[0]
         temp[0, 3, 2, 2] = -Jz[0]
@@ -86,7 +89,8 @@ class FiniteHaldanespin1(tn.FiniteMPO):
         # 11
         temp[0, 4, 0, 0] = 1.0
         temp[0, 4, 1, 1] = 1.0
-        temp[0, 4, 2, 2] = 1.0
+        temp[0, 4, 2, 2] = 1
+
         mpo.append(temp)
         for n in range(1, N - 1):
             temp = np.zeros((5, 5, 3, 3), dtype=dtype)
@@ -123,25 +127,29 @@ class FiniteHaldanespin1(tn.FiniteMPO):
 
             mpo.append(temp)
         temp = np.zeros((5, 1, 3, 3), dtype=dtype)
-        # small field at the last site For numerical stability
-        temp[4, 0, 0, 0] = -0
-        temp[4, 0, 2, 2] = 0
+
+
+
         # 11
         temp[0, 0, 0, 0] = 1.0
         temp[0, 0, 1, 1] = 1.0
-        temp[0, 0, 2, 2] = 1.0
+        temp[0,0,2,2]=1.0
+
         # Sp
-        temp[1, 0, 0, 1] = 2 ** 0.5
+        temp[1, 0, 0, 1] = 2**0.5
         temp[1, 0, 1, 2] = 2 ** 0.5
+
         # Sm
-        temp[2, 0, 1, 0] = 2 ** 0.5
+        temp[2, 0, 1, 0] = 2**0.5
         temp[2, 0, 2, 1] = 2 ** 0.5
+
         # Sz
-        temp[3, 0, 0, 0] = 1.0
-        temp[3, 0, 2, 2] = -1.0
+        temp[3, 0, 0, 0] = 1
+        temp[3, 0, 2, 2] = -1
+        # small field at the last site For numerical stability
         # D
-        temp[4, 0, 0, 0] = D[-1]
-        temp[4, 0, 2, 2] = D[-1]
+        temp[4, 0, 0, 0] = D[-1]-0.5
+        temp[4, 0, 2, 2] = D[-1]+0.5
 
         mpo.append(temp)
         super().__init__(tensors=mpo, backend=backend, name=name)
@@ -228,14 +236,14 @@ def run_twosite_dmrg(N: int, bond_dim: int, dtype: Type[np.number], Jz: np.ndarr
         dmrg.mps.tensors[site] = u
         dmrg.mps.tensors[site + 1] = ncon([s, vh], [[-1, 1], [1, -2, -3]],
                                           backend=dmrg.backend.name)
-    for site in range(N - 1, int(num_sites / 2 - 1), -1):
+    for site in range(N - 1, int(N / 2 - 1), -1):
         bondBlock = ncon([dmrg.mps.tensors[site - 1], dmrg.mps.tensors[site]],
                          [[-1, -2, 1], [1, -3, -4]],
                          backend=dmrg.backend.name)
         u, s, vh, _ = dmrg.mps.svd(bondBlock, 2, bond_dim, None)
         s = dmrg.backend.diagflat(s)
         dmrg.mps.tensors[site] = vh
-        if site == num_sites / 2:
+        if site == N / 2:
             sigularValue = s
 
         dmrg.mps.tensors[site - 1] = ncon([u, s], [[-1, -2, 1], [1, -3]],
@@ -280,10 +288,79 @@ if __name__ == '__main__':
         num_sweeps=n_sweeps,
         backend=be)
 
+    # 临界点lnL-S
+    S_array = []
+    num_sites = np.arange(8, 164, 12)
+    lnL = np.log(num_sites)
+
+    scatter_size = 100  # 散点大小
+
+    fig, ax = plt.subplots()
+    for num_site in num_sites:
+        jz = np.ones(num_site - 1)
+        jxy = np.ones(num_site - 1)
+        D = 0.96*np.ones(num_site)
+        energies, groundState, s = run_twosite_dmrg(
+            num_site,
+            bond_dim,
+            datatype,
+            jz,
+            jxy,
+            D,
+            num_sweeps=n_sweeps,
+            backend=be)
+        Entropy = computeEntanglemnt(groundState)
+        S_array.append(Entropy)
+    ax.scatter(lnL, S_array, c='blue', s=scatter_size)
+    plt.xlabel("lnL")
+    plt.ylabel("S")
+    plt.show()
+
+    '''
+
+    # 不同D下的bond_dimension-S图
+    num_sites = 128
+    jz = np.ones(num_sites - 1)
+    jxy = np.ones(num_sites - 1)
+    bz = np.ones(num_sites)
+    alpha = np.linspace(start=0.25, stop=1.0, num=4)  # 透明度数组
+    scatter_size = 100  # 散点大小数组
+    bond_dimension = list(np.arange(2, 10, 2)) + list(np.arange(10, 120, 10))
+    Dlist = [2, 1.2, 0.96]
+    fig, ax = plt.subplots()
+    for i in range(0, 3):
+        D = Dlist[i] * bz
+        Bond_array = []
+        S_array = []
+        for bond_dim in bond_dimension:
+            energies, groundState,s = run_twosite_dmrg(
+                num_sites,
+                bond_dim,
+                datatype,
+                jz,
+                jxy,
+                D,
+                num_sweeps=n_sweeps,
+                backend=be)
+            Entropy = computeEntanglemnt(groundState)
+
+            Bond_array.append(bond_dim)
+            print(f'Dmrg done for bond_dim={bond_dim},D={Dlist[i]}')
+
+            S_array.append(Entropy)
+
+        ax.scatter(Bond_array, S_array, c='blue', alpha=alpha[i], s=scatter_size)
+        plt.legend([f'D={Dlist[i]}'])
+
+    plt.xlabel("Bond Dimension")
+    plt.ylabel("S")
+    plt.show()
+    '''
+'''
     # 不同L下的D-S图
     alpha = np.linspace(start=0.25, stop=1.0, num=4)  # 透明度数组
 
-    sitenumber = [32]
+    sitenumber = [16,32,64]
     Dlist = np.arange(0, 2.2, 0.1)
     fig, ax = plt.subplots()
     for i in range(len(sitenumber)):
@@ -292,7 +369,6 @@ if __name__ == '__main__':
         num_sites = sitenumber[i]
         jz = np.ones(num_sites - 1)
         jxy = np.ones(num_sites - 1)
-
 
         for d in Dlist:
             D = d * np.ones(num_sites)
@@ -310,7 +386,7 @@ if __name__ == '__main__':
             D_array.append(d)
             print(f'Dmrg done for d={d},L={num_sites}')
 
-            S_array.append(Entropy)
+            S_array.append(EntangleS)
 
         ax.scatter(D_array, S_array, c='blue', alpha=alpha[i], s=150)
 
@@ -319,6 +395,7 @@ if __name__ == '__main__':
     plt.show()
 
     '''
+'''
     #D-Energy
     Energies=[]
 
@@ -338,72 +415,8 @@ if __name__ == '__main__':
     plt.show()
 '''
 
-'''
-    # 不同D下的bond_dimension-S图
-    num_sites = 128
-    jz = np.ones(num_sites - 1)
-    jxy = np.ones(num_sites - 1)
-    bz = np.ones(num_sites)
-    alpha = np.linspace(start=0.25, stop=1.0, num=4)  # 透明度数组
-    scatter_size = 100  # 散点大小数组
-    bond_dimension = list(np.arange(2, 10, 2)) + list(np.arange(10, 120, 10))
-    Dlist = [2, 1.2, 1]
-    fig, ax = plt.subplots()
-    for i in range(0, 3):
-        D = Dlist[i] * bz
-        Bond_array = []
-        S_array = []
-        for bond_dim in bond_dimension:
-            energies, groundState = run_twosite_dmrg(
-                num_sites,
-                bond_dim,
-                datatype,
-                jz,
-                jxy,
-                D,
-                num_sweeps=n_sweeps,
-                backend=be)
-            Entropy = computeEntanglemnt(groundState)
 
-            Bond_array.append(bond_dim)
-            print(f'Dmrg done for bond_dim={bond_dim},D={Dlist[i]}')
 
-#            S_array.append(Entropy)
 
-        ax.scatter(Bond_array, S_array, c='blue', alpha=alpha[i], s=scatter_size)
-        plt.legend([f'D={Dlist[i]}'])
 
-    plt.xlabel("Bond Dimension")
-    plt.ylabel("S")
-    plt.show()
-    '''
 
-'''
-    # 临界点lnL-S
-    S_array = []
-    num_sites = np.arange(8, 164, 12)
-    lnL = np.log(num_sites)
-
-    scatter_size = 100  # 散点大小
-
-    fig, ax = plt.subplots()
-    for num_site in num_sites:
-        jz = np.ones(num_site - 1)
-        jxy = np.ones(num_site - 1)
-        bz = np.ones(num_site)
-        energies, groundState = run_twosite_dmrg(
-            num_site,
-            bond_dim,
-            datatype,
-            jz,
-            jxy,
-            Bz=0.96*bz,
-            num_sweeps=n_sweeps,
-            backend=be)
-        Entropy = computeEntanglemnt(groundState)
-        S_array.append(Entropy)
-    ax.scatter(lnL, S_array, c='blue', s=scatter_size)
-    plt.xlabel("lnL")
-    plt.ylabel("S")
-    plt.show()
-    '''
