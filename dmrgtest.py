@@ -290,7 +290,7 @@ if __name__ == '__main__':
 
     # 临界点lnL-S
     S_array = []
-    num_sites = np.arange(8, 164, 12)
+    num_sites = list(np.arange(8, 40, 4))+list(np.arange(40,180,20))
     lnL = np.log(num_sites)
 
     scatter_size = 100  # 散点大小
