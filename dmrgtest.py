@@ -31,7 +31,7 @@ def initialize_spin1_mps(N: int, D: int, dtype: Type[np.number], backend: Text):
     `tn.FiniteMPS`: A spin 1 mps for the corresponding backend.
   """
 
-    return tn.FiniteMPS.random([3] * (N ) , [D] * (N - 1), dtype=dtype, backend=backend)
+    return tn.FiniteMPS.random([3] * (N), [D] * (N - 1), dtype=dtype, backend=backend)
 
 
 class FiniteHaldanespin1(tn.FiniteMPO):
@@ -69,10 +69,9 @@ class FiniteHaldanespin1(tn.FiniteMPO):
 
         # small field at the first site For numerical stability
 
-
         # D
-        temp[0, 0, 0, 0] = D[0]+0.5
-        temp[0, 0, 2, 2] = D[0]-0.5
+        temp[0, 0, 0, 0] = D[0] + 0.5
+        temp[0, 0, 2, 2] = D[0] - 0.5
 
         # Sm*J/2
         temp[0, 1, 1, 0] = 2 ** 0.5 * Jxy[0] / 2.0
@@ -128,19 +127,17 @@ class FiniteHaldanespin1(tn.FiniteMPO):
             mpo.append(temp)
         temp = np.zeros((5, 1, 3, 3), dtype=dtype)
 
-
-
         # 11
         temp[0, 0, 0, 0] = 1.0
         temp[0, 0, 1, 1] = 1.0
-        temp[0,0,2,2]=1.0
+        temp[0, 0, 2, 2] = 1.0
 
         # Sp
-        temp[1, 0, 0, 1] = 2**0.5
+        temp[1, 0, 0, 1] = 2 ** 0.5
         temp[1, 0, 1, 2] = 2 ** 0.5
 
         # Sm
-        temp[2, 0, 1, 0] = 2**0.5
+        temp[2, 0, 1, 0] = 2 ** 0.5
         temp[2, 0, 2, 1] = 2 ** 0.5
 
         # Sz
@@ -148,8 +145,8 @@ class FiniteHaldanespin1(tn.FiniteMPO):
         temp[3, 0, 2, 2] = -1
         # small field at the last site For numerical stability
         # D
-        temp[4, 0, 0, 0] = D[-1]-0.5
-        temp[4, 0, 2, 2] = D[-1]+0.5
+        temp[4, 0, 0, 0] = D[-1] - 0.5
+        temp[4, 0, 2, 2] = D[-1] + 0.5
 
         mpo.append(temp)
         super().__init__(tensors=mpo, backend=backend, name=name)
@@ -287,7 +284,44 @@ if __name__ == '__main__':
         D,
         num_sweeps=n_sweeps,
         backend=be)
+    # 不同L下的D-S图
+    alpha = np.linspace(start=0.25, stop=1.0, num=4)  # 透明度数组
 
+    sitenumber = [16, 32, 64]
+    Dlist = np.arange(0, 2.2, 0.1)
+    fig, ax = plt.subplots()
+    for i in range(len(sitenumber)):
+        D_array = []
+        S_array = []
+        num_sites = sitenumber[i]
+        jz = np.ones(num_sites - 1)
+        jxy = np.ones(num_sites - 1)
+
+        for d in Dlist:
+            D = d * np.ones(num_sites)
+            energies, groundState, EntangleS = run_twosite_dmrg(
+                num_sites,
+                bond_dim,
+                datatype,
+                jz,
+                jxy,
+                D,
+                num_sweeps=n_sweeps,
+                backend=be)
+            Entropy = computeEntanglemnt(groundState)
+
+            D_array.append(d)
+            print(f'Dmrg done for d={d},L={num_sites}')
+
+            S_array.append(EntangleS)
+
+        ax.scatter(D_array, S_array, c='blue', alpha=alpha[i], s=150, label=f'L={num_sites}')
+
+    plt.xlabel("D")
+    plt.ylabel("S")
+    plt.legend()
+    plt.show()
+'''
     # 临界点lnL-S
     S_array = []
     num_sites = list(np.arange(8, 40, 4))+list(np.arange(40,180,20))
@@ -315,8 +349,9 @@ if __name__ == '__main__':
     plt.xlabel("lnL")
     plt.ylabel("S")
     plt.show()
-
     '''
+
+'''
 
     # 不同D下的bond_dimension-S图
     num_sites = 128
@@ -356,45 +391,7 @@ if __name__ == '__main__':
     plt.ylabel("S")
     plt.show()
     '''
-'''
-    # 不同L下的D-S图
-    alpha = np.linspace(start=0.25, stop=1.0, num=4)  # 透明度数组
 
-    sitenumber = [16,32,64]
-    Dlist = np.arange(0, 2.2, 0.1)
-    fig, ax = plt.subplots()
-    for i in range(len(sitenumber)):
-        D_array = []
-        S_array = []
-        num_sites = sitenumber[i]
-        jz = np.ones(num_sites - 1)
-        jxy = np.ones(num_sites - 1)
-
-        for d in Dlist:
-            D = d * np.ones(num_sites)
-            energies, groundState, EntangleS = run_twosite_dmrg(
-                num_sites,
-                bond_dim,
-                datatype,
-                jz,
-                jxy,
-                D,
-                num_sweeps=n_sweeps,
-                backend=be)
-            Entropy = computeEntanglemnt(groundState)
-
-            D_array.append(d)
-            print(f'Dmrg done for d={d},L={num_sites}')
-
-            S_array.append(EntangleS)
-
-        ax.scatter(D_array, S_array, c='blue', alpha=alpha[i], s=150)
-
-    plt.xlabel("D")
-    plt.ylabel("S")
-    plt.show()
-
-    '''
 '''
     #D-Energy
     Energies=[]
@@ -414,9 +411,3 @@ if __name__ == '__main__':
     plt.scatter(Dlist, Energies, c='blue',s=100)
     plt.show()
 '''
-
-
-
-
-
-
