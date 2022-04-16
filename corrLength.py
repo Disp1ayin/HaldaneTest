@@ -14,7 +14,7 @@ from scipy.optimize import curve_fit
 
 #iDMRG
 N=2
-num_site=16
+num_site=32
 
 
 h = 0
