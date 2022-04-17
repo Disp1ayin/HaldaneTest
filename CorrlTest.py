@@ -10,12 +10,13 @@ import matplotlib.pyplot as plt
 from  tenpy.algorithms import tebd
 
 from scipy.optimize import curve_fit
+
 #iDMRG
 N=2
-num_site=64
+num_site=32
 
 
-h = 0
+h = 0.5
 D = 1
 hz = np.zeros(num_site)
 hz[0] = h
@@ -29,7 +30,8 @@ dmrg_params = {"trunc_params": {"chi_max": 100, "svd_min": 1.e-10}}
 Iinfo = dmrg.run(Ipsi, iM, dmrg_params)
 icorrL=Ipsi.correlation_length()
 print(f'correlation length in iDMRG is{icorrL}')
-#计算关联长度
+#计算关联长度并画拟合图像
+
 def computeCorrL(L,psi:MPS,start):
     r=np.arange(0,L-start-1,1)
     corrSz=[]
@@ -53,7 +55,7 @@ def computeCorrL(L,psi:MPS,start):
 
     plt.show()
     return corrL
-
+#测试
 l=num_site
 M = SpinChain({"S": 1, "L": l, "bc_MPS": "finite",
                    "Jx": 1, "Jy": 1, "Jz": 1, "D": D, "hz": hz})
